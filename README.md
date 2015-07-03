@@ -1,3 +1,4 @@
 GCMTest
 ======
-A simple example application using GCM
+A minimal example using GCM
+
