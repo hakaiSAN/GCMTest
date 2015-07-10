@@ -38,7 +38,7 @@
         <service android:name=".RegistrationService"
                  android:exported="false" />
 
-        <service android:name=".MyInstanceIDListenerService"
+        <service android:name=".MyIIDListenerService"
                  android:exported="false">
             <intent-filter>
                 <action android:name="com.google.android.gms.iid.InstanceID" />

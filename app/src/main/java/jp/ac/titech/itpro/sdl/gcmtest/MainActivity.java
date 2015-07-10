@@ -10,25 +10,37 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
 
+import java.util.ArrayList;
+
 
 public class MainActivity extends Activity {
 
     private final static String TAG = "MainActivity";
 
+    public final static String TOKEN = "token";
     public final static String TOKEN_REGISTERED = "tokenRegistered";
     public final static String REGISTRATION_COMPLETE = "registrationComplete";
 
+    public final static String MESSAGE_EXTRA = "message";
+    public final static String MESSAGE_RECEIVED = "messageReceived";
+
+    private final static String KEY_OUTPUT = "output";
+
     private TextView statusView;
+    private TextView idView;
+    private ArrayAdapter<String> outputAdapter;
+    private ArrayList<String> output;
 
     private BroadcastReceiver regReceiver;
+    private BroadcastReceiver msgReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,20 +55,30 @@ public class MainActivity extends Activity {
             finish();
         }
 
+        if (savedInstanceState != null)
+            output = savedInstanceState.getStringArrayList(KEY_OUTPUT);
+        if (output == null)
+            output = new ArrayList<>();
+
         statusView = (TextView) findViewById(R.id.status_view);
+        idView = (TextView) findViewById(R.id.id_view);
+        ListView outputView = (ListView)findViewById(R.id.output_view);
+        outputAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, output);
+        outputView.setAdapter(outputAdapter);
 
         regReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(context);
-                if (pref.getBoolean(TOKEN_REGISTERED, false)) {
-                    Log.i(TAG, "registered");
-                    statusView.setText(getString(R.string.status_registered));
-                }
-                else {
-                    Log.i(TAG, "unregistered");
-                    statusView.setText(getString(R.string.status_unregistered));
-                }
+                refreshUI();
+            }
+        };
+
+        msgReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                String message = intent.getStringExtra(MESSAGE_EXTRA);
+                Log.i(TAG, "onReceive: message=" + message);
+                outputAdapter.add(message);
             }
         };
 
@@ -64,11 +86,22 @@ public class MainActivity extends Activity {
     }
 
     @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        Log.i(TAG, "onSaveInstanceState");
+        for (String m: output)
+            Log.i(TAG, m);
+        outState.putStringArrayList(KEY_OUTPUT, output);
+    }
+
+    @Override
     protected void onResume() {
         super.onResume();
         Log.i(TAG, "onResume");
+        refreshUI();
         LocalBroadcastManager bm = LocalBroadcastManager.getInstance(this);
         bm.registerReceiver(regReceiver, new IntentFilter(REGISTRATION_COMPLETE));
+        bm.registerReceiver(msgReceiver, new IntentFilter(MESSAGE_RECEIVED));
     }
 
     @Override
@@ -76,28 +109,22 @@ public class MainActivity extends Activity {
         Log.i(TAG, "onPause");
         LocalBroadcastManager bm = LocalBroadcastManager.getInstance(this);
         bm.unregisterReceiver(regReceiver);
+        bm.unregisterReceiver(msgReceiver);
         super.onPause();
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
+    private void refreshUI() {
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
+        if (pref.getBoolean(TOKEN_REGISTERED, false)) {
+            String id = pref.getString(TOKEN, getString(R.string.id_default));
+            Log.i(TAG, "registered id=" + id);
+            statusView.setText(getString(R.string.status_registered));
+            idView.setText(id);
         }
-
-        return super.onOptionsItemSelected(item);
+        else {
+            Log.i(TAG, "unregistered");
+            statusView.setText(getString(R.string.status_unregistered));
+            idView.setText(getString(R.string.id_default));
+        }
     }
 }

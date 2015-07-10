@@ -15,7 +15,7 @@ import java.io.IOException;
 
 public class RegistrationService extends IntentService {
     private final static String TAG = "RegistrationService";
-    private final static String[] TOPICS = { "global" };
+    private final static String[] TOPICS = { "global", "meeting", "lunch" };
 
     public RegistrationService() {
         super(TAG);
@@ -23,6 +23,7 @@ public class RegistrationService extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
+        Log.i(TAG, "onHandleIntent");
         SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
         try {
             synchronized (this) {
@@ -35,7 +36,10 @@ public class RegistrationService extends IntentService {
                     GcmPubSub.getInstance(this).
                             subscribe(token, "/topics/" + topic, null);
 
-                pref.edit().putBoolean(MainActivity.TOKEN_REGISTERED, true).apply();
+                pref.edit()
+                        .putBoolean(MainActivity.TOKEN_REGISTERED, true)
+                        .putString(MainActivity.TOKEN, token)
+                        .apply();
             }
         }
         catch (IOException e) {

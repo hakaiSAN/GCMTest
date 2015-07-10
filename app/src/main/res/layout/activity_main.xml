@@ -18,7 +18,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/label_status"
-            android:layout_marginBottom="@dimen/activity_vertical_margin"/>
+            />
 
         <TextView
             android:id="@+id/status_view"
@@ -27,6 +27,27 @@
             android:layout_height="wrap_content"
             android:text="@string/status_unregistered" />
 
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="@dimen/activity_vertical_margin">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/label_id"/>
+
+        <TextView
+            android:id="@+id/id_view"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:singleLine="true"
+            android:ellipsize="middle"
+            android:text="@string/id_default" />
     </LinearLayout>
 
     <ListView
